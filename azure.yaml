@@ -1,0 +1,9 @@
+name: hephaestus-fhir-pipeline
+metadata:
+  template: hephaestus-fhir-pipeline@0.0.1-beta
+workflows:
+  up: 
+    steps:
+      - azd: provision
+      - azd: deploy --all
+services:  

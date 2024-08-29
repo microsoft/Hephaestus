@@ -1,0 +1,34 @@
+targetScope = 'subscription'
+
+@minLength(1)
+@maxLength(64)
+@description('Name of the the environment which is used to generate a short unique hash used in all resources.')
+param environmentName string
+
+@minLength(1)
+@description('Primary location for all resources')
+param location string
+
+param healthDataServiceWorkspaceName string = ''
+
+param resourceGroupName string = ''
+
+var abbrs = loadJsonContent('abbreviations.json')
+var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var tags = { 'azd-env-name': environmentName }
+
+resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
+  name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
+  location: location
+  tags: tags
+}
+
+module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
+  scope: resourceGroup
+  name: 'healthcareapis'
+  params: {
+    workspaceName: !empty(healthDataServiceWorkspaceName) ? healthDataServiceWorkspaceName : '${abbrs.healthcareapis}${resourceToken}'
+    location: location
+    tags: tags
+  }
+}
