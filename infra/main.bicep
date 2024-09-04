@@ -7,6 +7,7 @@ param environmentName string
 
 @minLength(1)
 @description('Primary location for all resources')
+@allowed(['southcentralus','northeurope','westeurope','eastus','eastus2','australiaeast','uksouth','westus2','canadacentral','switzerlandnorth','westus3','centralindia','southeastasia','koreacentral','swedencentral','northcentralus','francecentral','qatarcentral','japaneast','westcentralus','germanywestcentral'])
 param location string
 
 param healthDataServiceWorkspaceName string = ''
