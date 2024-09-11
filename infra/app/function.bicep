@@ -23,9 +23,12 @@ module api '../core/host/functions.bicep' = {
     applicationInsightsName: applicationInsightsName
     appServicePlanId: appServicePlanId
     keyVaultName: keyVaultName
-    managedIdentity: managedIdentity    
+    managedIdentity: managedIdentity
     storageAccountName: storageAccountName
     scmDoBuildDuringDeployment: false
+    // java
+    runtimeName: 'java'
+    runtimeVersion: '17'
   }
 }
 
