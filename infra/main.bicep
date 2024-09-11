@@ -33,3 +33,28 @@ module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
     tags: tags
   }
 }
+
+var containers = [
+  {
+    name: 'data'
+    publicAccess: 'None'
+  }
+]
+
+var queues = [
+  {
+    name: 'batchnotification'
+  }
+]
+
+module storageAccount 'core/storage/storage-account.bicep' = {
+  scope: resourceGroup
+  name: 'storage'
+  params: {
+    name: '${abbrs.storageStorageAccounts}${resourceToken}'
+    location: location
+    tags: tags
+    containers: containers
+    queues: queues
+  }
+}

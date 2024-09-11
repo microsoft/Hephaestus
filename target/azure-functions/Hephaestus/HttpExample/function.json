@@ -1,0 +1,15 @@
+{
+  "scriptFile" : "../Hephaestus-1.0-SNAPSHOT.jar",
+  "entryPoint" : "com.hephaestus.Function.run",
+  "bindings" : [ {
+    "type" : "httpTrigger",
+    "direction" : "in",
+    "name" : "req",
+    "methods" : [ "GET", "POST" ],
+    "authLevel" : "ANONYMOUS"
+  }, {
+    "type" : "http",
+    "direction" : "out",
+    "name" : "$return"
+  } ]
+}
