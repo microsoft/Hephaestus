@@ -6,4 +6,8 @@ workflows:
     steps:
       - azd: provision
       - azd: deploy --all
-services:  
+services:
+  function:
+    project: .
+    language: java
+    host: function
