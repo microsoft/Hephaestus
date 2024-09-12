@@ -9,6 +9,14 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import com.microsoft.azure.functions.annotation.QueueTrigger;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobClientBuilder;
+import com.azure.identity.AzureCliCredential;
+import com.azure.identity.AzureCliCredentialBuilder;
+import com.azure.identity.ChainedTokenCredential;
+import com.azure.identity.ChainedTokenCredentialBuilder;
+import com.azure.identity.ManagedIdentityCredential;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 
 import java.util.Optional;
 
@@ -33,6 +41,9 @@ public class Function {
         final String query = request.getQueryParameters().get("name");
         final String name = request.getBody().orElse(query);
 
+        String blobEndpoint = System.getenv("BlobEndpoint");
+        String containerName = System.getenv("ContainerName");
+
         if (name == null) {
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                     .body("Please pass a name on the query string or in the request body").build();
@@ -47,6 +58,25 @@ public class Function {
             final ExecutionContext context) {
         context.getLogger().info(message);
 
-        // read file from blob storage
+        // setup blob client
+        ManagedIdentityCredential managedIdentityCredential = new ManagedIdentityCredentialBuilder().build();
+        AzureCliCredential cliCredential = new AzureCliCredentialBuilder().build();
+
+        ChainedTokenCredential credential = new ChainedTokenCredentialBuilder().addLast(managedIdentityCredential)
+                .addLast(cliCredential).build();
+
+        String blobEndpoint = System.getenv("BlobEndpoint");
+        String containerName = System.getenv("ContainerName");
+
+        BlobClient blobClient = new BlobClientBuilder()
+                .endpoint(blobEndpoint)
+                .credential(credential)
+                .containerName(containerName)
+                .blobName(message)
+                .buildClient();
+
+        // read from blob
+        String content = new String(blobClient.downloadContent().toBytes());
+        context.getLogger().info(content);
     }
 }

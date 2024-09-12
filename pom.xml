@@ -37,6 +37,18 @@
             <version>2.23.4</version>
             <scope>test</scope>
         </dependency>
+    
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-storage-blob</artifactId>
+        <version>12.27.1</version>
+      </dependency>
+    
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-identity</artifactId>
+        <version>1.2.5</version>
+      </dependency>
     </dependencies>
 
     <build>
