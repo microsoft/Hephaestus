@@ -30,6 +30,12 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   tags: tags
 }
 
+var importConfiguration = {
+  enabled: true
+  initialImportMode: true
+  integrationDataStore: storageAccount.outputs.name
+}
+
 module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
   scope: resourceGroup
   name: 'healthcareapis'
@@ -37,6 +43,7 @@ module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
     workspaceName: !empty(healthDataServiceWorkspaceName) ? healthDataServiceWorkspaceName : '${abbrs.healthcareapis}${resourceToken}'
     location: location
     tags: tags
+    importConfiguration: importConfiguration
   }
 }
 
@@ -92,10 +99,29 @@ module functionApp 'app/function.bicep' = {
     storageAccountName: storageAccount.outputs.name
     keyVaultName: ''
     appServicePlanId: appServicePlan.outputs.id
+    managedIdentity: true
     appSettings: {
       FHIR_SERVER_URL: healthdataservice.outputs.FHIR_SERVICE_URL
       FHIR_STORAGE_CONTAINER: fhirStorageContainerName
       FHIR_STORAGE_QUEUE: fhirStorageQueueName
     }
+  }
+}
+
+module storageDataRoleAssignment 'core/security/role.bicep' = {
+  name: 'storageroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: healthdataservice.outputs.FHIR_SERVICE_IDENTITY_ID
+    roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe' // Storage Blob Data Contributor
+  }
+}
+
+module functionAppRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '4465e953-8ced-4406-a58e-0f6e3f3b530b' // FHIR Data Importer
   }
 }
