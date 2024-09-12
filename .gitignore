@@ -439,8 +439,3 @@ hs_err_pid*
 local.settings.json
 bin/
 obj/
-
-target/Hephaestus-1.0-SNAPSHOT.jar
-target/azure-functions/Hephaestus/Hephaestus-1.0-SNAPSHOT.jar
-target/surefire-reports/com.hephaestus.FunctionTest.txt
-target/surefire-reports/TEST-com.hephaestus.FunctionTest.xml
