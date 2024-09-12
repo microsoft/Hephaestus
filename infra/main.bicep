@@ -17,6 +17,8 @@ param resourceGroupName string = ''
 param appServicePlanName string = ''
 param functionAppName string = ''
 param funcStorageAccountName string = ''
+param fhirStorageContainerName string = 'data'
+param fhirStorageQueueName string = 'batchready'
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -43,14 +45,14 @@ var storageAccountName = !empty(funcStorageAccountName) ? funcStorageAccountName
 
 var containers = [
   {
-    name: 'data'
+    name: fhirStorageContainerName
     publicAccess: 'None'
   }
 ]
 
 var queues = [
   {
-    name: 'batchnotification'
+    name: fhirStorageQueueName
   }
 ]
 
@@ -90,5 +92,10 @@ module functionApp 'app/function.bicep' = {
     storageAccountName: storageAccount.outputs.name
     keyVaultName: ''
     appServicePlanId: appServicePlan.outputs.id
+    appSettings: {
+      FHIR_SERVER_URL: healthdataservice.outputs.FHIR_SERVICE_URL
+      FHIR_STORAGE_CONTAINER: fhirStorageContainerName
+      FHIR_STORAGE_QUEUE: fhirStorageQueueName
+    }
   }
 }

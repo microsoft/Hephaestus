@@ -7,7 +7,7 @@ param applicationInsightsName string = ''
 param appServicePlanId string
 param appSettings object = {}
 param keyVaultName string
-param serviceName string = 'api'
+param serviceName string = 'function'
 param storageAccountName string
 param managedIdentity bool = !empty(keyVaultName)
 

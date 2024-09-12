@@ -1,1 +1,4 @@
 GET http://localhost:7071/api/HttpExample?name=World
+
+###
+GET https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com/metadata
