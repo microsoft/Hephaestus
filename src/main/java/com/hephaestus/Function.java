@@ -1,5 +1,14 @@
 package com.hephaestus;
 
+import java.util.Optional;
+
+// Include the following imports to use table APIs
+import com.azure.data.tables.TableClient;
+import com.azure.data.tables.TableServiceClient;
+import com.azure.data.tables.TableServiceClientBuilder;
+import com.azure.data.tables.models.TableEntity;
+import com.hephaestus.models.BatchReference;
+import com.hephaestus.models.NdJsonReference;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
@@ -10,24 +19,13 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import com.microsoft.azure.functions.annotation.QueueTrigger;
 import com.microsoft.durabletask.DurableTaskClient;
+import com.microsoft.durabletask.OrchestrationStatusQuery;
+import com.microsoft.durabletask.OrchestrationStatusQueryResult;
 import com.microsoft.durabletask.TaskOrchestrationContext;
 import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
 import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobClientBuilder;
-import com.hephaestus.models.NdJsonReference;
-import com.azure.identity.AzureCliCredential;
-import com.azure.identity.AzureCliCredentialBuilder;
-import com.azure.identity.ChainedTokenCredential;
-import com.azure.identity.ChainedTokenCredentialBuilder;
-import com.azure.identity.ManagedIdentityCredential;
-import com.azure.identity.ManagedIdentityCredentialBuilder;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Optional;
 
 /**
  * Azure Functions with HTTP Trigger.
@@ -86,26 +84,106 @@ public class Function {
     @FunctionName("Cities")
     public String citiesOrchestrator(
             @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx) {
-        String result = "";
-        result += ctx.callActivity("Capitalize", "Tokyo", String.class).await() + ", ";
-        result += ctx.callActivity("Capitalize", "London", String.class).await() + ", ";
-        result += ctx.callActivity("Capitalize", "Seattle", String.class).await() + ", ";
-        result += ctx.callActivity("Capitalize", "Austin", String.class).await();
-        return result;
+    
+                NdJsonReference latestFile = ctx.getInput<NdJsonReference>();
+
+                // BatchReference currentBatch = ctx.getState(BatchReference.class);
+
+                // ctx.
+
+                // we should receive input of the newest file
+
+                // we should check our current batch size
+
+                // if we can fit the file in the batch we will add it
+
+                final boolean isLastFile = true;
+                final int currentBatchSize = 9;
+                final int maxBatchSize = 10;
+                final int nextFileSize = 2;
+
+                if (currentBatchSize + nextFileSize > maxBatchSize) {
+                    // kick off the batch
+                    ctx.callActivity("Capitalize", "Tokyo");
+
+                    // start a new batch 
+                }
+                
+                // add the file to the batch
+
+                if(isLastFile) {
+                    // kick off the batch
+                    ctx.callActivity("Capitalize", "Tokyo");
+                }
+
+
+
+                // if we can't fit the file in the batch we will kick off the batch or its the last file in the batch we will
+                
+                // and start a new batch
+
+                // if we 
+
+        //         String result = "";
+        // result += ctx.callActivity("Capitalize", "Tokyo", String.class).await() + ", ";
+        // result += ctx.callActivity("Capitalize", "London", String.class).await() + ", ";
+        // result += ctx.callActivity("Capitalize", "Seattle", String.class).await() + ", ";
+        // result += ctx.callActivity("Capitalize", "Austin", String.class).await();
+        // return result;
+
+
+        // consider logging payload sent to import endpoint
+
+
+        return "finished";
     }
 
-    /**
-     * This is the activity function that is invoked by the orchestrator function.
-     */
-    @FunctionName("Capitalize")
-    public String capitalize(@DurableActivityTrigger(name = "name") String name, final ExecutionContext context) {
-        context.getLogger().info("Capitalizing: " + name);
-        return name.toUpperCase();
+    // todo: make a task? if such a concept exists in java
+    @FunctionName("SaveToTable")
+    public void saveToTable(@DurableActivityTrigger(name = "batchReference") final BatchReference batchReference, final ExecutionContext context) {
+        // setup table client
+        String connectionString = System.getenv("StorageConnStr");
+        // table should accept filename, line count .... maybe we will add batchId, batchStatus etc
+        String tableName = System.getenv("TableName");
+        TableServiceClient serviceClient = new TableServiceClientBuilder().connectionString(connectionString).buildClient();
+        TableClient tableClient = serviceClient.getTableClient(tableName);
+
+        // create table entity
+        for (NdJsonReference file:batchReference.Files) {
+            TableEntity entity = new TableEntity(file.FileName, String.valueOf(file.LineCount));    
+            tableClient.upsertEntity(entity);
+        }
+
+        // todo: return status? make a task and await it?
     }
+
+    @FunctionName("LoadFromTable")
+    public BatchReference loadFromTable(@DurableActivityTrigger(name = "batchReference") final ExecutionContext context) {
+        String connectionString = System.getenv("StorageConnStr");
+        String tableName = System.getenv("TableName");
+        TableServiceClient serviceClient = new TableServiceClientBuilder().connectionString(connectionString).buildClient();
+        TableClient tableClient = serviceClient.getTableClient(tableName);
+
+        BatchReference batchReference = new BatchReference();
+
+        for (TableEntity entity : tableClient.listEntities()) {
+            NdJsonReference file = new NdJsonReference();
+            file.FileName = entity.getPartitionKey();
+            file.LineCount = Integer.parseInt(entity.getRowKey());
+            batchReference.Files.add(file);
+            batchReference.TotalResourceCount += file.LineCount;
+        }
+        
+        return batchReference;
+    }
+
+    
+
 
     @FunctionName("QueueProcessor")
     public void runQueueProcessor(
             @QueueTrigger(name = "msg", queueName = "fhir-hose", connection = "StorageConnStr") String message,
+            @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
             final ExecutionContext context) {
         context.getLogger().info(message);
 
@@ -123,6 +201,30 @@ public class Function {
         // }
 
         // so we should kick off an orchestration process...
+        DurableTaskClient client = durableContext.getClient();
+        
+            
+        // get all orchestration instances
+        OrchestrationStatusQuery noFilter = new OrchestrationStatusQuery();
+        OrchestrationStatusQueryResult result = client.queryInstances(noFilter);
+        var instances = result.getOrchestrationState();
+
+        if(instances.size() > 1 ) {
+            context.getLogger().info("There are more than one orchestration instances.");
+            // this should NEVER happen
+        } else if(instances.size() == 1) {
+            context.getLogger().info("There is one orchestration instance.");
+            // client.
+            // this should be the one we just started
+        } else {
+            context.getLogger().info("There are no orchestration instances.");
+            String instanceId = client.scheduleNewOrchestrationInstance("Cities");
+            context.getLogger().info("Created new Java orchestration with instance ID = " + instanceId);
+        }
+
+
+        // todo: check for existing orchestration instance and invoke that if it exists instead of starting a new one
+
 
         // // setup blob client
         // ManagedIdentityCredential managedIdentityCredential = new
