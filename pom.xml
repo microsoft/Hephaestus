@@ -55,6 +55,12 @@
             <artifactId>durabletask-azure-functions</artifactId>
             <version>1.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-data-tables</artifactId>
+            <version>12.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>
