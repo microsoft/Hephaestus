@@ -1,4 +1,3 @@
-@token=Bearer eyJ0
 @fhirUrl=https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com
 GET http://localhost:7071/api/HttpExample?name=World
 
@@ -7,13 +6,13 @@ GET {{fhirUrl}}/metadata
 
 ###
 GET {{fhirUrl}}/PractitionerRole
-Authorization: {{token}}
+Authorization: {{$dotenv TOKEN}}
 
 ###
 POST {{fhirUrl}}/$import
 Prefer: respond-async
 Content-Type: application/fhir+json
-Authorization: {{token}}
+Authorization: {{$dotenv TOKEN}}
 
 {
     "resourceType": "Parameters",
@@ -44,7 +43,7 @@ Authorization: {{token}}
 
 ###
 GET {{fhirUrl}}/_operations/import/2
-Authorization: {{token}}
+Authorization: {{$dotenv TOKEN}}
 
 ###
 GET 
