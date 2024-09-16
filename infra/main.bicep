@@ -32,7 +32,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
 
 var importConfiguration = {
   enabled: true
-  initialImportMode: true
+  initialImportMode: false
   integrationDataStore: storageAccount.outputs.name
 }
 

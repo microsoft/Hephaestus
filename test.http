@@ -1,8 +1,49 @@
+@fhirUrl=https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com
 GET http://localhost:7071/api/HttpExample?name=World
 
 ###
-GET https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com/metadata
+GET {{fhirUrl}}/metadata
 
 ###
-GET https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com/Account
-Authorization: Bearer eyJ---
+GET {{fhirUrl}}/PractitionerRole
+Authorization: {{$dotenv TOKEN}}
+
+###
+POST {{fhirUrl}}/$import
+Prefer: respond-async
+Content-Type: application/fhir+json
+Authorization: {{$dotenv TOKEN}}
+
+{
+    "resourceType": "Parameters",
+    "parameter": [
+        {
+            "name": "inputFormat",
+            "valueString": "application/fhir+ndjson"
+        },
+        {
+            "name": "mode",
+            "valueString": "IncrementalLoad"
+        },         
+        {
+            "name": "input",
+            "part": [
+                { 
+                    "name": "url",
+                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22.ndjson"
+                },
+                {
+                    "name": "etag",
+                    "valueUri": "\"0x8DCD4CAC1941FF0\""
+                }
+            ]
+        }
+    ]
+}
+
+###
+GET {{fhirUrl}}/_operations/import/2
+Authorization: {{$dotenv TOKEN}}
+
+###
+GET 
