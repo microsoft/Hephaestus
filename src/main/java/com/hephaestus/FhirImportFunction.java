@@ -31,7 +31,7 @@ public class FhirImportFunction {
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(url.toURI())
                             .header("Content-Type", "application/json")
-                            .POST(HttpRequest.BodyPublishers.ofString(fhirImportRequest.toJson()))
+                            .POST(HttpRequest.BodyPublishers.ofString(importRequestJson))
                             .build();
 
                     HttpResponse<String> response = client.send(request, BodyHandlers.ofString());    
