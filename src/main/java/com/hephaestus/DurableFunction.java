@@ -1,30 +1,17 @@
 package com.hephaestus;
 
-import java.util.Optional;
-
 // Include the following imports to use table APIs
-import com.azure.data.tables.TableClient;
-import com.azure.data.tables.TableServiceClient;
-import com.azure.data.tables.TableServiceClientBuilder;
-import com.azure.data.tables.models.TableEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hephaestus.models.BatchReference;
 import com.hephaestus.models.NdJsonReference;
 import com.microsoft.azure.functions.ExecutionContext;
-import com.microsoft.azure.functions.HttpMethod;
-import com.microsoft.azure.functions.HttpRequestMessage;
-import com.microsoft.azure.functions.HttpResponseMessage;
-import com.microsoft.azure.functions.HttpStatus;
-import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
-import com.microsoft.azure.functions.annotation.HttpTrigger;
 import com.microsoft.azure.functions.annotation.QueueTrigger;
 import com.microsoft.durabletask.DurableTaskClient;
 import com.microsoft.durabletask.OrchestrationStatusQuery;
 import com.microsoft.durabletask.OrchestrationStatusQueryResult;
 import com.microsoft.durabletask.TaskOrchestrationContext;
-import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
 import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
@@ -80,48 +67,42 @@ public class DurableFunction {
     // how do I do async/await??
     // what is the cool way to do null coalescing in java?
     @FunctionName("Orchestration")
-    public String citiesOrchestrator(
+    public String batchOrchestrator(
             @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx) {
 
         NdJsonReference latestFile = ctx.getInput(NdJsonReference.class);
         BatchReference currentBatch = ctx.callActivity("LoadFromTable", BatchReference.class).await();
-        if (currentBatch == null) {
-            currentBatch = new BatchReference();
-        }
-
-        // we should check our current batch size
-
-        // if we can fit the file in the batch we will add it
-
-        // final boolean isLastFile = true;
-        // final int currentBatchSize = 9;
+        
         final int maxBatchSize = 10; // testing in manageable sizes for now..
         // final int maxBatchSize = 100000000; // real value, 100M
-        // final int nextFileSize = 2;
 
+        // if we can't fit the file in the batch we will kick off the current batch
         if (currentBatch.TotalResourceCount + latestFile.LineCount > maxBatchSize) {
-            // kick off the batch
-            ctx.callActivity("Capitalize", "Tokyo");
+            ctx.callActivity("InitiateExport", currentBatch).await();
 
-            // start a new batch
+            // we should consider moving the change to batch status and saving of that to the initiate export activity
+            currentBatch.BatchStatus = "initiated";
+            ctx.callActivity("SaveBatchReference", currentBatch).await();
+
+            // and start a new batch
+            currentBatch = new BatchReference();
+            currentBatch.BatchStatus = "staging";
         }
 
         // add the file to the batch
+        currentBatch.Files.add(latestFile);
+        currentBatch.TotalResourceCount += latestFile.LineCount;
 
+        ctx.callActivity("SaveBatchReference", currentBatch).await();
+
+        // last file we will receive then kick off the batch regardless of size
         if (latestFile.IsLastFileInRequest) {
-            // kick off the batch
-            ctx.callActivity("Capitalize", "Tokyo");
+            ctx.callActivity("InitiateExport", currentBatch).await();
+            currentBatch.BatchStatus = "initiated";
+            ctx.callActivity("SaveBatchReference", currentBatch).await();
         }
 
-        // if we can't fit the file in the batch we will kick off the batch or its the
-        // last file in the batch we will
-
-        // and start a new batch
-
-        // if we
-
-        // consider logging payload sent to import endpoint
-
+        // consider logging payload sent to import endpoint; probably can be handled by export activity
         return "finished";
     }
 

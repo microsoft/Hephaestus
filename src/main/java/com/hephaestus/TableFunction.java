@@ -9,49 +9,89 @@ import com.hephaestus.models.NdJsonReference;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
+import java.util.UUID;
 
-public  class TableFunction{
-    // todo: make a task? if such a concept exists in java
-    @FunctionName("SaveToTable")
+/*
+ * This class contains functions that interact with an Azure Table Storage account.
+ * We will use it to persist batch information and the file references within the batch.
+ * It will only care about saving and loading the information - not mutating it.
+ * 
+ * todos: investigate async/await, error handling, and logging
+ */
+
+public class TableFunction {
+    @FunctionName("SaveBatchReference")
     public void saveToTable(@DurableActivityTrigger(name = "batchReference") final BatchReference batchReference,
             final ExecutionContext context) {
-        // setup table client
-        String connectionString = System.getenv("StorageConnStr");
-        // table should accept filename, line count .... maybe we will add batchId,
-        // batchStatus etc
-        String tableName = System.getenv("TableName");
-        TableServiceClient serviceClient = new TableServiceClientBuilder().connectionString(connectionString)
+        TableServiceClient serviceClient = new TableServiceClientBuilder()
+                .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
-        TableClient tableClient = serviceClient.getTableClient(tableName);
+        TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
 
-        // create table entity
+        // save batch reference
+        TableEntity batchEntity = new TableEntity("batch", batchReference.BatchId.toString());
+        batchEntity.addProperty("TotalResourceCount", batchReference.TotalResourceCount);
+        batchEntity.addProperty("BatchStatus", batchReference.BatchStatus);
+        tableClient.upsertEntity(batchEntity);
+
+        // save file references
         for (NdJsonReference file : batchReference.Files) {
-            TableEntity entity = new TableEntity(file.FileName, String.valueOf(file.LineCount));
+            TableEntity entity = new TableEntity(batchReference.BatchId.toString(), file.FileName);
+            entity.addProperty("LineCount", file.LineCount);
             tableClient.upsertEntity(entity);
         }
 
         // todo: return status? make a task and await it?
     }
 
-    @FunctionName("LoadFromTable")
+    @FunctionName("LoadBatchReference")
     public BatchReference loadFromTable(
             @DurableActivityTrigger(name = "batchReference") final ExecutionContext context) {
-        String connectionString = System.getenv("StorageConnStr");
-        String tableName = System.getenv("TableName");
-        TableServiceClient serviceClient = new TableServiceClientBuilder().connectionString(connectionString)
+        TableServiceClient serviceClient = new TableServiceClientBuilder()
+                .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
-        TableClient tableClient = serviceClient.getTableClient(tableName);
+        TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
 
-        BatchReference batchReference = new BatchReference();
+        // fetch only the rows whose partition key is "batch" as the batch reference
+        // check for status staging
+        // there should only ever be one batch reference in staging status
+        BatchReference currentBatch = tableClient
+                .listEntities()
+                .stream()
+                .filter(entity -> entity.getPartitionKey().equals("batch")
+                        && entity.getProperty("BatchStatus").equals("staging"))
+                .map(entity -> {
+                    BatchReference batchReference = new BatchReference();
+                    batchReference.BatchId = UUID.fromString(entity.getRowKey());
+                    batchReference.TotalResourceCount = Integer
+                            .parseInt(entity.getProperty("TotalResourceCount").toString());
+                    batchReference.BatchStatus = entity.getProperty("BatchStatus").toString();
+                    return batchReference;
+                })
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No batch reference found with status 'staging'"));
 
-        for (TableEntity entity : tableClient.listEntities()) {
-            NdJsonReference file = new NdJsonReference();
-            file.FileName = entity.getPartitionKey();
-            file.LineCount = Integer.parseInt(entity.getRowKey());
-            batchReference.Files.add(file);
-            batchReference.TotalResourceCount += file.LineCount;
+        if (currentBatch == null) {
+            // for initial run
+            return new BatchReference()
+            {{
+                BatchStatus = "staging";
+            }};
         }
 
-        return batchReference;
+        // fetch file references associated with the batch
+        currentBatch.Files = tableClient
+                .listEntities()
+                .stream()
+                .filter(entity -> entity.getPartitionKey().equals(currentBatch.BatchId.toString()))
+                .map(entity -> {
+                    NdJsonReference ndJsonReference = new NdJsonReference();
+                    ndJsonReference.FileName = entity.getRowKey();
+                    ndJsonReference.LineCount = Integer.parseInt(entity.getProperty("LineCount").toString());
+                    return ndJsonReference;
+                })
+                .toList();
+
+        return currentBatch;
     }
 }
