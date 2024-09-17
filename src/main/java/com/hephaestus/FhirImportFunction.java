@@ -32,6 +32,9 @@ public class FhirImportFunction {
 
                     String body = response.body();
                     context.getLogger().info("FHIR $import response code: " + response.statusCode());
+                    // Grab the status location from the response header
+                    String statusLocation = response.headers().firstValue("Content-Location").get();
+
                 } catch (Exception e) {
                     context.getLogger().severe("Error sending FHIR $import request: " + e.getMessage());
                 }
