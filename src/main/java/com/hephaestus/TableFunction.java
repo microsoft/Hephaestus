@@ -27,6 +27,7 @@ public class TableFunction {
                 .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
         TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
+        context.getLogger().info("Saving batch reference " + batchReference.BatchId + " to table storage.");
 
         // save batch reference
         TableEntity batchEntity = new TableEntity("batch", batchReference.BatchId.toString());
@@ -34,10 +35,12 @@ public class TableFunction {
         batchEntity.addProperty("BatchStatus", batchReference.BatchStatus);
         tableClient.upsertEntity(batchEntity);
 
+        context.getLogger().info("Saving " + batchReference.Files.size() + " file references for batch "
+                + batchReference.BatchId + " to table storage.");
         // save file references
         for (NdJsonReference file : batchReference.Files) {
-            TableEntity entity = new TableEntity(batchReference.BatchId.toString(), file.FileName);
-            entity.addProperty("LineCount", file.LineCount);
+            TableEntity entity = new TableEntity(batchReference.BatchId.toString(), file.filename);
+            entity.addProperty("LineCount", file.lineCount);
             tableClient.upsertEntity(entity);
         }
 
@@ -51,6 +54,8 @@ public class TableFunction {
                 .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
         TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
+
+        context.getLogger().info("Loading staging batch reference from table storage.");
 
         // fetch only the rows whose partition key is "batch" as the batch reference
         // check for status staging
@@ -73,10 +78,11 @@ public class TableFunction {
 
         if (currentBatch == null) {
             // for initial run
-            return new BatchReference()
-            {{
-                BatchStatus = "staging";
-            }};
+            return new BatchReference() {
+                {
+                    BatchStatus = "staging";
+                }
+            };
         }
 
         // fetch file references associated with the batch
@@ -86,11 +92,13 @@ public class TableFunction {
                 .filter(entity -> entity.getPartitionKey().equals(currentBatch.BatchId.toString()))
                 .map(entity -> {
                     NdJsonReference ndJsonReference = new NdJsonReference();
-                    ndJsonReference.FileName = entity.getRowKey();
-                    ndJsonReference.LineCount = Integer.parseInt(entity.getProperty("LineCount").toString());
+                    ndJsonReference.filename = entity.getRowKey();
+                    ndJsonReference.lineCount = Integer.parseInt(entity.getProperty("LineCount").toString());
                     return ndJsonReference;
                 })
                 .toList();
+
+        context.getLogger().info("Loaded staging batch reference " + currentBatch.BatchId + " from table storage.");
 
         return currentBatch;
     }
