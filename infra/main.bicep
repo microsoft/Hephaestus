@@ -19,6 +19,7 @@ param functionAppName string = ''
 param funcStorageAccountName string = ''
 param fhirStorageContainerName string = 'data'
 param fhirStorageQueueName string = 'batchready'
+param fhirStorageTableName string = 'batchtable'
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -63,6 +64,12 @@ var queues = [
   }
 ]
 
+var tables = [
+  {
+    name: fhirStorageTableName
+  }
+]
+
 module storageAccount 'core/storage/storage-account.bicep' = {
   scope: resourceGroup
   name: 'storage'
@@ -72,6 +79,7 @@ module storageAccount 'core/storage/storage-account.bicep' = {
     tags: tags
     containers: containers
     queues: queues
+    tables: tables
   }
 }
 
@@ -104,12 +112,16 @@ module functionApp 'app/function.bicep' = {
       FHIR_SERVER_URL: healthdataservice.outputs.FHIR_SERVICE_URL
       FHIR_STORAGE_CONTAINER: fhirStorageContainerName
       FHIR_STORAGE_QUEUE: fhirStorageQueueName
+      FHIR_STORAGE_TABLE: fhirStorageTableName
     }
   }
 }
 
-module storageDataRoleAssignment 'core/security/role.bicep' = {
-  name: 'storageroleassignment'
+
+// Role assignments
+
+module storageBlobDataRoleAssignment 'core/security/role.bicep' = {
+  name: 'storageblobroleassignment'
   scope: resourceGroup
   params: {
     principalId: healthdataservice.outputs.FHIR_SERVICE_IDENTITY_ID
@@ -117,11 +129,39 @@ module storageDataRoleAssignment 'core/security/role.bicep' = {
   }
 }
 
-module functionAppRoleAssignment 'core/security/role.bicep' = {
-  name: 'functionroleassignment'
+// Function App Role Assignments
+module functionAppFhirRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionfhirroleassignment'
   scope: resourceGroup
   params: {
     principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
     roleDefinitionId: '4465e953-8ced-4406-a58e-0f6e3f3b530b' // FHIR Data Importer
+  }
+}
+
+module functionAppStorageBlobRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionstorageblobroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Contributor
+  }
+}
+
+module functionAppStorageTableRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionstoragetableroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3' // Storage Table Data Contributor
+  }
+}
+
+module functionAppStorageQueueRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionstoragequeueroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '974c5e8b-45b9-4653-ba55-5f855dd0fb88' // Storage Queue Data Contributor
   }
 }
