@@ -4,6 +4,7 @@ import com.azure.core.http.HttpResponse;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
 import com.azure.data.tables.models.TableEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hephaestus.models.BatchReference;
 import com.hephaestus.models.FhirImportRequest;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -21,9 +22,11 @@ public class FhirImportFunction {
             {
                 // Build FHIR $import request
                 FhirImportRequest fhirImportRequest = new FhirImportRequest();
+                ObjectMapper mapper = new ObjectMapper();
+                String importRequestJson = mapper.writeValueAsString(fhirImportRequest);
                 // Send FHIR $import request
                 try {
-                    URL url = new URL("https://fhir-server-url/$import");
+                    URL url = new URL(System.getenv("FhirServerUrl") + "/$import");
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(url.toURI())
