@@ -1,6 +1,9 @@
 package com.hephaestus;
 
 import com.azure.core.http.HttpResponse;
+import com.azure.data.tables.TableClient;
+import com.azure.data.tables.TableClientBuilder;
+import com.azure.data.tables.models.TableEntity;
 import com.hephaestus.models.BatchReference;
 import com.hephaestus.models.FhirImportRequest;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -35,10 +38,23 @@ public class FhirImportFunction {
                     // Grab the status location from the response header
                     String statusLocation = response.headers().firstValue("Content-Location").get();
 
+                    // Save FHIR $import response to table
+
+                    TableClient tableClient = new TableClientBuilder()
+                        .connectionString("<your-connection-string>") // or use any of the other authentication methods
+                        .tableName(tableName)
+                        .buildClient();
+
+                    TableEntity entity = new TableEntity(partitionKey, rowKey)
+                        .addProperty("Product", "Marker Set")
+                        .addProperty("Price", 5.00)
+                        .addProperty("Quantity", 21);
+
+                    tableClient.createEntity(entity);
+                    
                 } catch (Exception e) {
                     context.getLogger().severe("Error sending FHIR $import request: " + e.getMessage());
                 }
 
-                // Save FHIR $import response to table
             }
 }
