@@ -93,6 +93,10 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   resource tableServices 'tableServices' = if (!empty(tables)) {
     name: 'default'
     properties: {}
+    resource table 'tables' = [for table in tables: {
+      name: table.name
+      properties: {}
+    }]
   }
 }
 
