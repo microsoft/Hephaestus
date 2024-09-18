@@ -14,6 +14,9 @@ import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 
+import java.util.UUID;
+import java.util.ArrayList;
+
 public class DurableFunction {
     @FunctionName("QueueProcessor")
     public void runQueueProcessor(
@@ -69,7 +72,9 @@ public class DurableFunction {
 
             // and start a new batch
             currentBatch = new BatchReference();
+            currentBatch.BatchId = UUID.randomUUID();
             currentBatch.BatchStatus = "staging";
+            currentBatch.Files =  new ArrayList<NdJsonReference>();
         }
 
         // add the file to the batch
