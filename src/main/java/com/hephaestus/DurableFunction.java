@@ -1,7 +1,4 @@
 package com.hephaestus;
-
-import com.azure.core.util.logging.LogLevel;
-// Include the following imports to use table APIs
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,17 +13,10 @@ import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 
-import io.netty.util.internal.logging.Log4J2LoggerFactory;
-
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-
 public class DurableFunction {
-    private final Logger _logger = Logger.getLogger(DurableFunction.class.getName());
-
     @FunctionName("QueueProcessor")
     public void runQueueProcessor(
-            @QueueTrigger(name = "msg", queueName = "fhir-hose", connection = "StorageConnStr") String message,
+            @QueueTrigger(name = "QueueProcessor", queueName = "fhir-hose", connection = "StorageConnStr") String message,
             @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
             final ExecutionContext context) {
         context.getLogger().info(message);
@@ -83,17 +73,18 @@ public class DurableFunction {
     // what is the cool way to do null coalescing in java?
     @FunctionName("Orchestration")
     public String batchOrchestrator(
-            @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx) {
+            @DurableOrchestrationTrigger(name = "Orchestration") TaskOrchestrationContext ctx) {
 
         NdJsonReference latestFile = ctx.getInput(NdJsonReference.class);
-        BatchReference currentBatch = ctx.callActivity("LoadFromTable", BatchReference.class).await();
+        
+        BatchReference currentBatch = ctx.callActivity("LoadBatchReference", "discardme", BatchReference.class).await();
 
         final int maxBatchSize = 10; // testing in manageable sizes for now..
         // final int maxBatchSize = 100000000; // real value, 100M
 
         // if we can't fit the file in the batch we will kick off the current batch
         if (currentBatch.TotalResourceCount + latestFile.lineCount > maxBatchSize) {
-            ctx.callActivity("Import", currentBatch).await();
+            ctx.callActivity("ImportBatch", currentBatch).await();
 
             // we should consider moving the change to batch status and saving of that to
             // the initiate export activity
@@ -113,7 +104,7 @@ public class DurableFunction {
 
         // last file we will receive then kick off the batch regardless of size
         if (latestFile.isLastFileInRequest) {
-            ctx.callActivity("InitiateExport", currentBatch).await();
+            ctx.callActivity("ImportBatch", currentBatch).await();
             currentBatch.BatchStatus = "initiated";
             ctx.callActivity("SaveBatchReference", currentBatch).await();
         }
