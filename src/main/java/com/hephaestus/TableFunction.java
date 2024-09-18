@@ -9,6 +9,8 @@ import com.hephaestus.models.NdJsonReference;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
+
+import java.util.List;
 import java.util.UUID;
 
 /*
@@ -16,12 +18,12 @@ import java.util.UUID;
  * We will use it to persist batch information and the file references within the batch.
  * It will only care about saving and loading the information - not mutating it.
  * 
- * todos: investigate async/await, error handling, and logging
+ * todos: investigate async/await, error handling, and loggiSaveBatchReferenceng
  */
 
 public class TableFunction {
     @FunctionName("SaveBatchReference")
-    public void saveToTable(@DurableActivityTrigger(name = "batchReference") final BatchReference batchReference,
+    public void saveToTable(@DurableActivityTrigger(name = "SaveBatchReference") final BatchReference batchReference,
             final ExecutionContext context) {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
                 .connectionString(System.getenv("StorageConnStr"))
@@ -49,7 +51,7 @@ public class TableFunction {
 
     @FunctionName("LoadBatchReference")
     public BatchReference loadFromTable(
-            @DurableActivityTrigger(name = "batchReference") final ExecutionContext context) {
+            @DurableActivityTrigger(name = "LoadBatchReference") String discardString, final ExecutionContext context) {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
                 .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
@@ -74,22 +76,26 @@ public class TableFunction {
                     return batchReference;
                 })
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No batch reference found with status 'staging'"));
+                .orElse(null);
 
+        // for initial run
         if (currentBatch == null) {
-            // for initial run
-            return new BatchReference() {
-                {
-                    BatchStatus = "staging";
-                }
-            };
+            context.getLogger()
+                    .info("No staging batch reference found in table storage. Creating new batch reference.");
+            currentBatch = new BatchReference();
+            currentBatch.BatchId = UUID.randomUUID();
+            currentBatch.TotalResourceCount = 0;
+            currentBatch.BatchStatus = "staging";
+            currentBatch.Files = List.of();
+            return currentBatch;
         }
 
         // fetch file references associated with the batch
+        final BatchReference finalCurrentBatch = currentBatch;
         currentBatch.Files = tableClient
                 .listEntities()
                 .stream()
-                .filter(entity -> entity.getPartitionKey().equals(currentBatch.BatchId.toString()))
+                .filter(entity -> entity.getPartitionKey().equals(finalCurrentBatch.BatchId.toString()))
                 .map(entity -> {
                     NdJsonReference ndJsonReference = new NdJsonReference();
                     ndJsonReference.filename = entity.getRowKey();
