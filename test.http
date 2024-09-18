@@ -34,7 +34,7 @@ Authorization: {{$dotenv TOKEN}}
                 },
                 {
                     "name": "etag",
-                    "valueUri": "\"0x8DCD4CAC1941FF0\""
+                    "valueUri": "\"0x8DCD72442DBC0F8\""
                 }
             ]
         }
@@ -42,7 +42,7 @@ Authorization: {{$dotenv TOKEN}}
 }
 
 ###
-GET {{fhirUrl}}/_operations/import/2
+GET {{fhirUrl}}/_operations/import/1
 Authorization: {{$dotenv TOKEN}}
 
 ###
