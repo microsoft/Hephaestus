@@ -30,11 +30,24 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22.ndjson"
+                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22-part1.ndjson"
                 },
                 {
                     "name": "etag",
-                    "valueUri": "\"0x8DCD72442DBC0F8\""
+                    "valueUri": "\"0x8DCD73CF1F02FCC\""
+                }
+            ]
+        },
+        {
+            "name": "input",
+            "part": [
+                { 
+                    "name": "url",
+                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22-part2.ndjson"
+                },
+                {
+                    "name": "etag",
+                    "valueUri": "\"0x8DCD73CF1DF9073\""
                 }
             ]
         }
