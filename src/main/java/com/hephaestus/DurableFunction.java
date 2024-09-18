@@ -1,4 +1,5 @@
 package com.hephaestus;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -47,36 +48,16 @@ public class DurableFunction {
 
         // log the instance id
         context.getLogger().info("Initiated orchestration with instance ID: ." + instanceId);
-
-        // // get all orchestration instances
-        // OrchestrationStatusQuery noFilter = new OrchestrationStatusQuery();
-        // OrchestrationStatusQueryResult result = client.queryInstances(noFilter);
-        // var instances = result.getOrchestrationState();
-
-        // if (instances.size() > 1) {
-        // context.getLogger().info("There are more than one orchestration instances.");
-        // // this should NEVER happen
-        // } else if (instances.size() == 1) {
-        // context.getLogger().info("There is one orchestration instance.");
-        // // client.
-        // // this should be the one we just started
-        // } else {
-        // context.getLogger().info("There are no orchestration instances.");
-        // String instanceId = client.scheduleNewOrchestrationInstance("Orchestration",
-        // ndJsonReference);
-        // context.getLogger().info("Created new Java orchestration with instance ID = "
-        // + instanceId);
-        // }
     }
 
     // how do I do async/await??
     // what is the cool way to do null coalescing in java?
     @FunctionName("Orchestration")
-    public String batchOrchestrator(
+    public void batchOrchestrator(
             @DurableOrchestrationTrigger(name = "Orchestration") TaskOrchestrationContext ctx) {
 
         NdJsonReference latestFile = ctx.getInput(NdJsonReference.class);
-        
+
         BatchReference currentBatch = ctx.callActivity("LoadBatchReference", "discardme", BatchReference.class).await();
 
         final int maxBatchSize = 10; // testing in manageable sizes for now..
@@ -85,11 +66,6 @@ public class DurableFunction {
         // if we can't fit the file in the batch we will kick off the current batch
         if (currentBatch.TotalResourceCount + latestFile.lineCount > maxBatchSize) {
             ctx.callActivity("ImportBatch", currentBatch).await();
-
-            // we should consider moving the change to batch status and saving of that to
-            // the initiate export activity
-            currentBatch.BatchStatus = "initiated";
-            ctx.callActivity("SaveBatchReference", currentBatch).await();
 
             // and start a new batch
             currentBatch = new BatchReference();
@@ -105,12 +81,6 @@ public class DurableFunction {
         // last file we will receive then kick off the batch regardless of size
         if (latestFile.isLastFileInRequest) {
             ctx.callActivity("ImportBatch", currentBatch).await();
-            currentBatch.BatchStatus = "initiated";
-            ctx.callActivity("SaveBatchReference", currentBatch).await();
         }
-
-        // consider logging payload sent to import endpoint; probably can be handled by
-        // export activity
-        return "finished";
     }
 }
