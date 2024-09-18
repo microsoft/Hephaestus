@@ -97,6 +97,27 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
   }
 }
 
+module logAnalytics 'core/monitor/loganalytics.bicep' = {
+  scope: resourceGroup
+  name: 'loganalytics'
+  params: {
+    name: 'logAnalyticsWorkspace'
+    location: location
+    tags: tags
+  }
+}
+
+module appInsights 'core/monitor/applicationinsights.bicep' = {
+  scope: resourceGroup
+  name: 'appInsights'
+  params: {
+    name: 'appInsightsInstance'
+    location: location
+    tags: tags
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
+  }
+}
+
 module functionApp 'app/function.bicep' = {
   scope: resourceGroup
   name: 'functionapp'
@@ -113,10 +134,22 @@ module functionApp 'app/function.bicep' = {
       FHIR_STORAGE_CONTAINER: fhirStorageContainerName
       FHIR_STORAGE_QUEUE: fhirStorageQueueName
       FHIR_STORAGE_TABLE: fhirStorageTableName
+      APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.outputs.connectionString
     }
   }
 }
 
+// Add dashboard
+module dashboard 'core/monitor/logging-dashboard.bicep' = {
+  scope: resourceGroup
+  name: 'dashboard'
+  params: {
+    name: 'loggingDashboard'
+    applicationInsightsName: appInsights.outputs.name
+    location: location
+    functionAppName: appServiceName
+  }
+}
 
 // Role assignments
 
