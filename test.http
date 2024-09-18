@@ -30,7 +30,15 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
+<<<<<<< HEAD
                     "valueUri": "{{fhirUrl}}/data/2024-07-22 (1).ndjson"
+=======
+                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22.ndjson"
+                },
+                {
+                    "name": "etag",
+                    "valueUri": "\"0x8DCD72442DBC0F8\""
+>>>>>>> origin/main
                 }
             ]
         }
@@ -38,7 +46,11 @@ Authorization: {{$dotenv TOKEN}}
 }
 
 ###
+<<<<<<< HEAD
 GET {{fhirUrl}}/_operations/import/7
+=======
+GET {{fhirUrl}}/_operations/import/1
+>>>>>>> origin/main
 Authorization: {{$dotenv TOKEN}}
 Accept: application/fhir+json
 Content-Type: application/fhir+json

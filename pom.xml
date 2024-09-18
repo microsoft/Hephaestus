@@ -30,7 +30,13 @@
             <version>5.4.2</version>
             <scope>test</scope>
         </dependency>
-
+        
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20240303</version>
+        </dependency>
+        
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -38,17 +44,41 @@
             <scope>test</scope>
         </dependency>
     
-      <dependency>
-        <groupId>com.azure</groupId>
-        <artifactId>azure-storage-blob</artifactId>
-        <version>12.27.1</version>
-      </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.27.1</version>
+        </dependency>
     
-      <dependency>
-        <groupId>com.azure</groupId>
-        <artifactId>azure-identity</artifactId>
-        <version>1.2.5</version>
-      </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.2.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.microsoft</groupId>
+            <artifactId>durabletask-azure-functions</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-data-tables</artifactId>
+            <version>12.1.1</version>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.10.0.pr1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.13.0</version> <!-- Use the latest version available -->
+        </dependency>
     </dependencies>
 
     <build>
