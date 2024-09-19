@@ -1,4 +1,5 @@
-@fhirUrl=https://ahds3swm6va3d5km6-api1.fhir.azurehealthcareapis.com
+@fhirUrl={{$dotenv FHIR_URL}}
+@storageUrl={{$dotenv STORAGE_URL}}
 GET http://localhost:7071/api/HttpExample?name=World
 
 ###
@@ -30,11 +31,7 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22-part1.ndjson"
-                },
-                {
-                    "name": "etag",
-                    "valueUri": "\"0x8DCD8044993D774\""
+                    "valueUri": "{{storageUrl}}/data/2024-07-22.ndjson"
                 }
             ]
         },
@@ -43,11 +40,7 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22-part2.ndjson"
-                },
-                {
-                    "name": "etag",
-                    "valueUri": "\"0x8DCD80449949AA5\""
+                    "valueUri": "{{storageUrl}}/data/2024-07-22-part2.ndjson"
                 }
             ]
         }
@@ -55,8 +48,13 @@ Authorization: {{$dotenv TOKEN}}
 }
 
 ###
-GET {{fhirUrl}}/_operations/import/1
+GET {{fhirUrl}}/_operations/import/2
 Authorization: {{$dotenv TOKEN}}
 
 ###
-GET 
+#Load batchtable with x number of rows
+GET http://localhost:7071/api/PreLoadBatchQueueTableHttp?x=1
+
+###
+#Reset batchtable 'imported' rows to 'initiated'
+GET http://localhost:7071/api/ResetBatchQueueTableHttp?update=true
