@@ -57,8 +57,6 @@ Authorization: {{$dotenv TOKEN}}
 ###
 GET {{fhirUrl}}/_operations/import/8
 Authorization: {{$dotenv TOKEN}}
-Accept: application/fhir+json
-Content-Type: application/fhir+json
 
 ###
 GET  https://ahdsjdf43tf5zcwks-api1.fhir.azurehealthcareapis.com/_operations/import/8
