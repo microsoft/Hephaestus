@@ -30,15 +30,7 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-<<<<<<< HEAD
                     "valueUri": "{{fhirUrl}}/data/2024-07-22 (1).ndjson"
-=======
-                    "valueUri": "https://st3swm6va3d5km6.blob.core.windows.net/data/2024-07-22.ndjson"
-                },
-                {
-                    "name": "etag",
-                    "valueUri": "\"0x8DCD72442DBC0F8\""
->>>>>>> origin/main
                 }
             ]
         }
@@ -46,11 +38,7 @@ Authorization: {{$dotenv TOKEN}}
 }
 
 ###
-<<<<<<< HEAD
-GET {{fhirUrl}}/_operations/import/7
-=======
-GET {{fhirUrl}}/_operations/import/1
->>>>>>> origin/main
+GET {{fhirUrl}}/_operations/import/8
 Authorization: {{$dotenv TOKEN}}
 Accept: application/fhir+json
 Content-Type: application/fhir+json
@@ -58,3 +46,11 @@ Content-Type: application/fhir+json
 ###
 GET  https://ahdsjdf43tf5zcwks-api1.fhir.azurehealthcareapis.com/_operations/import/8
 Authorization: {{$dotenv TOKEN}}
+
+###
+#Load batchtable with x number of rows
+GET http://localhost:7071/api/PreLoadBatchQueueTableHttp?x=1
+
+###
+#Reset batchtable 'imported' rows to 'initiated'
+GET http://localhost:7071/api/ResetBatchQueueTableHttp?update=true

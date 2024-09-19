@@ -19,6 +19,7 @@ param functionAppName string = ''
 param funcStorageAccountName string = ''
 param fhirStorageContainerName string = 'data'
 param fhirStorageQueueName string = 'batchready'
+param importProcessingQueueName string = 'import-processing'
 param fhirStorageTableName string = 'batchtable'
 
 var abbrs = loadJsonContent('abbreviations.json')
@@ -61,6 +62,9 @@ var containers = [
 var queues = [
   {
     name: fhirStorageQueueName
+  }
+  {
+    name: importProcessingQueueName
   }
 ]
 
@@ -122,6 +126,7 @@ module functionApp 'app/function.bicep' = {
   scope: resourceGroup
   name: 'functionapp'
   params: {
+    applicationInsightsName: appInsights.outputs.name
     name: appServiceName
     location: location
     tags: tags

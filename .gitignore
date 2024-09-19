@@ -442,3 +442,6 @@ bin/
 obj/
 
 data/
+
+# all env specific deploy scripts
+deploy.*.sh
