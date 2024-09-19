@@ -1,3 +1,13 @@
+#!/bin/bash
+
+# Variables
+SUBSCRIPTION_ID="<subscription-id>"
+LOCATION="<location>"
+RESOURCE_GROUP="<resource-group>"
+FUNCTION_APP_NAME="<function-app-name>"
+ARTIFACT_ID="<artifact-id-from-pom>"
+FUNCTION_APP_PATH="../target/azure-functions/$ARTIFACT_ID"
+ZIP_FILE="$FUNCTION_APP_PATH/functionapp.zip"
 
 # Function to display usage
 usage() {
@@ -6,21 +16,21 @@ usage() {
 
 # Function to deploy infrastructure
 deploy_infra() {
-    echo "Deploying infra"
-    az deployment sub create --subscription <subscriptionId> --location <location> --name java-azfunction-deploy --parameters ./iac/bicep/create-java-function-all.dev.bicepparam
+    echo "Please run azd up to create/update the infra"
 }
 
 # Function to package function app
 package_function() {
     echo "Packaging function app"
+    cd ../
     mvn clean package
     if [ $? -ne 0 ]; then
         echo "Failed to package function app"
     fi
+    cd src
 
     echo "Creating ZIP file"
-    ZIP_FILE="target/functionapp.zip"
-    cd ../target/azure-functions/<function-app-name>
+    cd $FUNCTION_APP_PATH
     zip -r functionapp.zip *
     cd ../../../src
 }
@@ -29,28 +39,30 @@ package_function() {
 deploy_function() {
     echo "Deploying function app"
     az functionapp deployment source config-zip \
-      --resource-group <resource-group-name> \
-      --name <function-app-name> \
-      --src target/azure-functions/<function-app-name>/functionapp.zip
-    if [ $? -ne 0 ]; then
-        echo "Failed to deploy function app"
-    fi
+      --resource-group $RESOURCE_GROUP \
+      --name $FUNCTION_APP_NAME \
+      --src $ZIP_FILE
 }
 
-if [ -z "$1" ]; then
+# Main script logic
+if [ $# -eq 0 ]; then
     usage
 fi
 
-if [ "$1" == "all" ]; then
-    echo "Deploying all"
-    deploy_infra
-    package_function
-    deploy_function
-elif [ "$1" == "infra" ]; then
-    deploy_infra
-elif [ "$1" == "function" ]; then
-    package_function
-    deploy_function
-else
-    usage
-fi
+case $1 in
+    all)
+        deploy_infra
+        package_function
+        deploy_function
+        ;;
+    infra)
+        deploy_infra
+        ;;
+    function)
+        package_function
+        deploy_function
+        ;;
+    *)
+        usage
+        ;;
+esac
