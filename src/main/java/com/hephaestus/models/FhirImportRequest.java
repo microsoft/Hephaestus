@@ -5,12 +5,12 @@ import java.util.List;
 
 public class FhirImportRequest implements Serializable {
     private String resourceType;
-    private List<Parameter> parameter;
+    private Parameter[] parameter;
 
     public static class Parameter {
         private String name;
         private String valueString;
-        private List<Part> part;
+        private Part[] part;
 
         public static class Part {
             private String name;
@@ -51,11 +51,11 @@ public class FhirImportRequest implements Serializable {
             this.valueString = valueString;
         }
 
-        public List<Part> getPart() {
+        public Part[] getPart() {
             return part;
         }
 
-        public void setPart(List<Part> part) {
+        public void setPart(Part[] part) {
             this.part = part;
         }
     }
@@ -69,11 +69,11 @@ public class FhirImportRequest implements Serializable {
         this.resourceType = resourceType;
     }
 
-    public List<Parameter> getParameter() {
+    public Parameter[] getParameter() {
         return parameter;
     }
 
-    public void setParameter(List<Parameter> parameter) {
+    public void setParameter(Parameter[] parameter) {
         this.parameter = parameter;
     }    
 }

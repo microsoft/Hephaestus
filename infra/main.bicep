@@ -18,9 +18,9 @@ param appServicePlanName string = ''
 param functionAppName string = ''
 param funcStorageAccountName string = ''
 param fhirStorageContainerName string = 'data'
-param fhirStorageQueueName string = 'batchready'
-param importProcessingQueueName string = 'import-processing'
+param fhirStorageQueueName string = 'fhir-hose'
 param fhirStorageTableName string = 'batchtable'
+param fhirUseInitialMode bool = false
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -32,6 +32,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   tags: tags
 }
 
+var importMode = fhirUseInitialMode ? 'InitialLoad' : 'IncrementalLoad'
 var importConfiguration = {
   enabled: true
   initialImportMode: false
@@ -140,6 +141,7 @@ module functionApp 'app/function.bicep' = {
       FHIR_STORAGE_QUEUE: fhirStorageQueueName
       FHIR_STORAGE_TABLE: fhirStorageTableName
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.outputs.connectionString
+      FHIR_IMPORT_MODE: importMode
     }
   }
 }
