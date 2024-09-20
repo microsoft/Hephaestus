@@ -83,7 +83,8 @@ public class FhirImportFunction {
             HttpRequest request = HttpRequest.newBuilder()
             .uri(url.toURI())
             .header("Authorization", "Bearer " + authToken.getToken())
-            .header("Content-Type", "application/json")
+            .header("Content-Type", "application/fhir+json")
+            .header("Prefer", "respond-async")
             .POST(HttpRequest.BodyPublishers.ofString(importRequestJson))
             .build();
 
