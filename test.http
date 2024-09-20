@@ -31,7 +31,7 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-                    "valueUri": "{{storageUrl}}/data/2024-07-22.ndjson"
+                    "valueUri": "{{storageUrl}}/data/2024-07-24-part1.ndjson"
                 }
             ]
         },
@@ -40,7 +40,7 @@ Authorization: {{$dotenv TOKEN}}
             "part": [
                 { 
                     "name": "url",
-                    "valueUri": "{{storageUrl}}/data/2024-07-22-part2.ndjson"
+                    "valueUri": "{{storageUrl}}/data/2024-07-24-part2.ndjson"
                 }
             ]
         }
@@ -48,7 +48,7 @@ Authorization: {{$dotenv TOKEN}}
 }
 
 ###
-GET {{fhirUrl}}/_operations/import/2
+GET {{fhirUrl}}/_operations/import/5
 Authorization: {{$dotenv TOKEN}}
 
 ###
