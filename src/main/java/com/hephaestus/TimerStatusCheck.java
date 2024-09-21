@@ -7,11 +7,18 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.microsoft.azure.functions.annotation.*;
+
+import reactor.core.publisher.Mono;
+
+import com.azure.core.credential.AccessToken;
+import com.azure.core.credential.TokenCredential;
+import com.azure.core.credential.TokenRequestContext;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableServiceClient;
 import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableEntityUpdateMode;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -107,9 +114,14 @@ public class TimerStatusCheck {
     private static boolean checkStatusAndLogErrors(TableClient tableClient, String partitionKey, String rowKey, String statusUrl, Logger logger) throws Exception {
         logger.info("Attempting to check status of: " + statusUrl);
         //need to add an authorization header, use default credential
+        TokenCredential tokenCredential = new DefaultAzureCredentialBuilder().build();
+        Mono<AccessToken> tokenMono = tokenCredential.getToken(new TokenRequestContext().addScopes(System.getenv("TimerStatusCheckAccessScopes")));
+        AccessToken token = tokenMono.block();
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
             .uri(new URI(statusUrl))
+            .header("Authorization", "Bearer " + token.getToken())
             .GET()
             .build();
 
