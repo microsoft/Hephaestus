@@ -13,6 +13,17 @@
       "dependsOn": "package (functions)"
     },
     {
+      "type": "func",
+      "label": "mvn azure-functions:run",
+      "command": "mvn azure-functions:run",
+      "problemMatcher": "$func-java-watch",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/target/azure-functions/Hephaestus"
+      },
+      "dependsOn": "package (functions)"
+    },
+    {
       "label": "package (functions)",
       "command": "mvn clean package",
       "type": "shell",
