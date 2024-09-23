@@ -20,6 +20,7 @@ param funcStorageAccountName string = ''
 param fhirStorageContainerName string = 'data'
 param fhirStorageQueueName string = 'fhir-hose'
 param fhirStorageTableName string = 'batchtable'
+param importProcessingQueueName string = 'import-processing'
 param fhirUseInitialMode bool = false
 
 var abbrs = loadJsonContent('abbreviations.json')
