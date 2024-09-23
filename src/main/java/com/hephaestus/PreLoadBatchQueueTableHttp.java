@@ -33,7 +33,7 @@ public class PreLoadBatchQueueTableHttp {
 
         // Initialize TableServiceClient
         TableServiceClient tableServiceClient = new TableServiceClientBuilder()
-            .connectionString(System.getenv("AzureWebJobsStorage"))
+            .connectionString(System.getenv("StorageConnStr"))
             .buildClient();
 
         // Get a reference to the table
