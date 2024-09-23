@@ -15,6 +15,7 @@ import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.ArrayList;
 
 public class DurableFunction {
@@ -23,7 +24,9 @@ public class DurableFunction {
             @QueueTrigger(name = "QueueProcessor", queueName = "fhir-hose", connection = "StorageConnStr") String message,
             @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
             final ExecutionContext context) {
-        context.getLogger().info(message);
+
+        final Logger logger = context.getLogger();
+        logger.info(message);
 
         NdJsonReference ndJsonReference = null;
 
@@ -42,6 +45,37 @@ public class DurableFunction {
         if (ndJsonReference == null) {
             context.getLogger().severe("Failed to deserialize message into NdJsonReference.");
             throw new RuntimeException("Deserialization error.");
+        }
+
+        final String maxBatchSizeStr = System.getenv("MAX_BATCH_SIZE");
+        final String suggestedMinFileSizeStr = System.getenv("SUGGESTED_MIN_FILE_SIZE");
+
+        final int maxBatchSize = maxBatchSizeStr != null ? Integer.parseInt(maxBatchSizeStr) : 100_000_000;
+        final int suggestedMinFileSize = suggestedMinFileSizeStr != null ? Integer.parseInt(maxBatchSizeStr) : 20_000;
+
+        // for now, just warn us when a file is not matching recommendations but don't
+        // stop the process
+        if (ndJsonReference.lineCount < suggestedMinFileSize) {
+            logger.warning("For the file " +
+                    ndJsonReference.filename +
+                    " the line count of " +
+                    ndJsonReference.lineCount +
+                    "is less than " +
+                    suggestedMinFileSizeStr +
+                    " is the suggested minimum file size for this process.");
+        }
+
+        // exit early with logging if the file is too large to be included in any batch
+        if (ndJsonReference.lineCount > maxBatchSize) {
+            logger.severe("For the file " +
+                    ndJsonReference.filename +
+                    " the line count of " +
+                    ndJsonReference.lineCount +
+                    "is greater than " +
+                    maxBatchSizeStr +
+                    " is the maximum batch size for this process.");
+
+            return;
         }
 
         // so we should kick off an orchestration process...
@@ -63,8 +97,9 @@ public class DurableFunction {
 
         BatchReference currentBatch = ctx.callActivity("LoadBatchReference", "discardme", BatchReference.class).await();
 
-        final int maxBatchSize = 10; // testing in manageable sizes for now..
-        // final int maxBatchSize = 100000000; // real value, 100M
+        final String maxBatchSizeStr = System.getenv("MAX_BATCH_SIZE");
+
+        final int maxBatchSize = maxBatchSizeStr != null ? Integer.parseInt(maxBatchSizeStr) : 100_000_000;
 
         // if we can't fit the file in the batch we will kick off the current batch
         if (currentBatch.TotalResourceCount + latestFile.lineCount > maxBatchSize) {
@@ -74,7 +109,7 @@ public class DurableFunction {
             currentBatch = new BatchReference();
             currentBatch.BatchId = UUID.randomUUID();
             currentBatch.BatchStatus = "staging";
-            currentBatch.Files =  new ArrayList<NdJsonReference>();
+            currentBatch.Files = new ArrayList<NdJsonReference>();
         }
 
         // add the file to the batch
