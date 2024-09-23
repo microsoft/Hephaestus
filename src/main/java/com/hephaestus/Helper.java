@@ -1,14 +1,16 @@
 package com.hephaestus;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableServiceClient;
 import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import com.hephaestus.models.BatchReference;
 import com.hephaestus.models.NdJsonReference;
-import java.util.logging.Logger;
-import java.util.List;
-import java.util.UUID;
 
 /*
  * Java Azure Functions don't seem to allow for initiating an activity function 
@@ -19,7 +21,7 @@ public class Helper {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
                 .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
-        TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
+        TableClient tableClient = serviceClient.getTableClient(System.getenv("FHIR_STORAGE_TABLE"));
 
         logger.info("Loading staging batch reference from table storage.");
 
@@ -37,6 +39,7 @@ public class Helper {
                     batchReference.TotalResourceCount = Integer
                             .parseInt(entity.getProperty("TotalResourceCount").toString());
                     batchReference.BatchStatus = entity.getProperty("BatchStatus").toString();
+                    batchReference.BatchStatusUrl = entity.getProperty("BatchStatusUrl").toString();
                     return batchReference;
                 })
                 .findFirst()
@@ -49,6 +52,7 @@ public class Helper {
             currentBatch.BatchId = UUID.randomUUID();
             currentBatch.TotalResourceCount = 0;
             currentBatch.BatchStatus = "staging";
+            currentBatch.BatchStatusUrl = "";
             currentBatch.Files = List.of();
             return currentBatch;
         }
@@ -67,7 +71,7 @@ public class Helper {
                 })
                 .toList();
 
-        logger.info("Loaded staging batch reference " + currentBatch.BatchId + " from table storage.");
+        logger.log(Level.INFO, "Loaded staging batch reference {0} from table storage.", currentBatch.BatchId);
 
         return currentBatch;
     }
@@ -76,17 +80,17 @@ public class Helper {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
                 .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
-        TableClient tableClient = serviceClient.getTableClient(System.getenv("TableName"));
-        logger.info("Saving batch reference " + batchReference.BatchId + " to table storage.");
+        TableClient tableClient = serviceClient.getTableClient(System.getenv("FHIR_STORAGE_TABLE"));
+        logger.log(Level.INFO, "Saving batch reference {0} to table storage.", batchReference.BatchId);
 
         // save batch reference
         TableEntity batchEntity = new TableEntity("batch", batchReference.BatchId.toString());
         batchEntity.addProperty("TotalResourceCount", batchReference.TotalResourceCount);
         batchEntity.addProperty("BatchStatus", batchReference.BatchStatus);
+        batchEntity.addProperty("BatchStatusUrl", batchReference.BatchStatusUrl);
         tableClient.upsertEntity(batchEntity);
 
-        logger.info("Saving " + batchReference.Files.size() + " file references for batch "
-                + batchReference.BatchId + " to table storage.");
+        logger.log(Level.INFO, "Saving {0} file references for batch {1} to table storage.", new Object[]{batchReference.Files.size(), batchReference.BatchId});
         // save file references
         for (NdJsonReference file : batchReference.Files) {
             TableEntity entity = new TableEntity(batchReference.BatchId.toString(), file.filename);
