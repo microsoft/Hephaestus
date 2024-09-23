@@ -4,8 +4,8 @@
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "java",
     "StorageConnStr": "",
-    "BlobEndpoint": "",
-    "ContainerName": "",
-    "TableName": ""
+    "FHIR_STORAGE_CONTAINER": "",
+    "FHIR_STORAGE_TABLE": "",
+    "FHIR_STORAGE_QUEUE": ""
   }
 }

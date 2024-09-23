@@ -8,4 +8,5 @@ public class BatchReference {
     public int TotalResourceCount;
     public List<NdJsonReference> Files;
     public String BatchStatus;
+    public String BatchStatusUrl;
 }
