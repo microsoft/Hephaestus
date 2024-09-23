@@ -6,6 +6,10 @@
     "StorageConnStr": "",
     "FHIR_STORAGE_CONTAINER": "",
     "FHIR_STORAGE_TABLE": "",
-    "FHIR_STORAGE_QUEUE": ""
+    "FHIR_STORAGE_QUEUE": "",
+    "FHIR_SERVER_URL": "",
+    "FHIR_IMPORT_MODE":"",
+    "MAX_BATCH_SIZE": 100000000,
+    "SUGGESTED_MIN_FILE_SIZE": 20000
   }
 }
