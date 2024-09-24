@@ -36,14 +36,14 @@ public class DurableFunction {
             objectMapper.registerModule(new JavaTimeModule());
             ndJsonReference = objectMapper.readValue(message,
                     NdJsonReference.class);
-            context.getLogger().info("Successfully deserialized message into NdJsonReference.");
+            logger.info("Successfully deserialized message into NdJsonReference.");
         } catch (JsonProcessingException e) {
-            context.getLogger().severe("Failed to deserialize message into NdJsonReference: " + e.getMessage());
+            logger.severe("Failed to deserialize message into NdJsonReference: " + e.getMessage());
             throw new RuntimeException("Deserialization error: " + e.getMessage(), e);
         }
 
         if (ndJsonReference == null) {
-            context.getLogger().severe("Failed to deserialize message into NdJsonReference.");
+            logger.severe("Failed to deserialize message into NdJsonReference.");
             throw new RuntimeException("Deserialization error.");
         }
 
@@ -84,7 +84,7 @@ public class DurableFunction {
         String instanceId = client.scheduleNewOrchestrationInstance("Orchestration", ndJsonReference);
 
         // log the instance id
-        context.getLogger().info("Initiated orchestration with instance ID: ." + instanceId);
+        logger.info("Initiated orchestration with instance ID: ." + instanceId);
     }
 
     // how do I do async/await??

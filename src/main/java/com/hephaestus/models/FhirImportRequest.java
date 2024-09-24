@@ -1,7 +1,6 @@
 package com.hephaestus.models;
 
 import java.io.Serializable;
-import java.util.List;
 
 public class FhirImportRequest implements Serializable {
     private String resourceType;
@@ -75,5 +74,5 @@ public class FhirImportRequest implements Serializable {
 
     public void setParameter(Parameter[] parameter) {
         this.parameter = parameter;
-    }    
+    }
 }
