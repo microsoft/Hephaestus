@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class DurableFunction {
     @FunctionName("QueueProcessor")
     public void runQueueProcessor(
-            @QueueTrigger(name = "QueueProcessor", queueName = "fhir-hose", connection = "StorageConnStr") String message,
+            @QueueTrigger(name = "QueueProcessor", queueName = "fhir-hose", connection = "FHIR_STORAGE_CONN_STR") String message,
             @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
             final ExecutionContext context) {
 

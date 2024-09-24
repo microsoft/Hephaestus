@@ -54,7 +54,7 @@ public class FhirImportFunction {
 
         // Get the blob container URL
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-                .connectionString(System.getenv("StorageConnStr")).buildClient();
+                .connectionString(System.getenv("FHIR_STORAGE_CONN_STR")).buildClient();
         String blobBaseUrl = blobServiceClient.getAccountUrl() + "/" + System.getenv("FHIR_STORAGE_CONTAINER");
         
         for (NdJsonReference file : batchReference.Files) {

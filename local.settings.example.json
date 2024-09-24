@@ -3,7 +3,7 @@
   "Values": {
     "AzureWebJobsStorage": "",
     "FUNCTIONS_WORKER_RUNTIME": "java",
-    "StorageConnStr": "",
+    "FHIR_STORAGE_CONN_STR": "",
     "FHIR_STORAGE_CONTAINER": "",
     "FHIR_STORAGE_TABLE": "",
     "FHIR_STORAGE_QUEUE": "",
