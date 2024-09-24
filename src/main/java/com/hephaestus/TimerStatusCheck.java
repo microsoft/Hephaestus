@@ -52,7 +52,7 @@ public class TimerStatusCheck {
 
         // Initialize TableServiceClient
         TableServiceClient tableServiceClient = new TableServiceClientBuilder()
-            .connectionString(System.getenv("AzureWebJobsStorage"))
+            .connectionString(System.getenv("StorageConnStr"))
             .buildClient();
 
         // Get a reference to the table
@@ -60,7 +60,7 @@ public class TimerStatusCheck {
 
         // Initialize QueueClient
         QueueClient queueClient = new QueueClientBuilder()
-            .connectionString(System.getenv("AzureWebJobsStorage"))
+            .connectionString(System.getenv("StorageConnStr"))
             .queueName("import-processing")
             .buildClient();
 
