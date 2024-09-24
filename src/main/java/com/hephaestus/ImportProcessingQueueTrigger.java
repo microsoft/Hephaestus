@@ -25,7 +25,7 @@ public class ImportProcessingQueueTrigger {
      */
     @FunctionName("ImportProcessingQueueTrigger")
     public void run(
-        @QueueTrigger(name = "message", queueName = "import-processing", connection = "AzureWebJobsStorage") String message,
+        @QueueTrigger(name = "message", queueName = "import-processing", connection = "StorageConnStr") String message,
         final ExecutionContext context
     ) {
         context.getLogger().info("Java Queue trigger function processed a message: " + message);
@@ -47,7 +47,7 @@ public class ImportProcessingQueueTrigger {
             context.getLogger().info("Initializing TableServiceClient...");
             // Initialize TableServiceClient
             TableServiceClient tableServiceClient = new TableServiceClientBuilder()
-                .connectionString(System.getenv("AzureWebJobsStorage"))
+                .connectionString(System.getenv("StorageConnStr"))
                 .buildClient();
 
             context.getLogger().info("Getting a reference to the table...");
