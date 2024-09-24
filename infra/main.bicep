@@ -143,6 +143,7 @@ module functionApp 'app/function.bicep' = {
       FHIR_STORAGE_TABLE: fhirStorageTableName
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.outputs.connectionString
       FHIR_IMPORT_MODE: importMode
+      LogAnalyticsWorkspaceUrl: logAnalytics.outputs.url
     }
   }
 }

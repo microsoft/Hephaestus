@@ -18,5 +18,8 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-previ
   })
 }
 
+var logAnalyticsUrl = 'https://${logAnalytics.name}.monitor.azure.com'
+
 output id string = logAnalytics.id
 output name string = logAnalytics.name
+output url string = logAnalyticsUrl
