@@ -19,7 +19,7 @@ import com.hephaestus.models.NdJsonReference;
 public class Helper {
     public static BatchReference loadBatchReference(Logger logger) {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
-                .connectionString(System.getenv("StorageConnStr"))
+                .connectionString(System.getenv("FHIR_STORAGE_CONN_STR"))
                 .buildClient();
         TableClient tableClient = serviceClient.getTableClient(System.getenv("FHIR_STORAGE_TABLE"));
 
@@ -78,7 +78,7 @@ public class Helper {
 
     public static void saveBatchReference(BatchReference batchReference, Logger logger) {
         TableServiceClient serviceClient = new TableServiceClientBuilder()
-                .connectionString(System.getenv("StorageConnStr"))
+                .connectionString(System.getenv("FHIR_STORAGE_CONN_STR"))
                 .buildClient();
         TableClient tableClient = serviceClient.getTableClient(System.getenv("FHIR_STORAGE_TABLE"));
         logger.log(Level.INFO, "Saving batch reference {0} to table storage.", batchReference.BatchId);

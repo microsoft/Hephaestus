@@ -7,7 +7,28 @@ param environmentName string
 
 @minLength(1)
 @description('Primary location for all resources')
-@allowed(['southcentralus','northeurope','westeurope','eastus','eastus2','australiaeast','uksouth','westus2','canadacentral','switzerlandnorth','westus3','centralindia','southeastasia','koreacentral','swedencentral','northcentralus','francecentral','qatarcentral','japaneast','westcentralus','germanywestcentral'])
+@allowed([
+  'southcentralus'
+  'northeurope'
+  'westeurope'
+  'eastus2'
+  'australiaeast'
+  'uksouth'
+  'westus2'
+  'canadacentral'
+  'switzerlandnorth'
+  'westus3'
+  'centralindia'
+  'southeastasia'
+  'koreacentral'
+  'swedencentral'
+  'northcentralus'
+  'francecentral'
+  'qatarcentral'
+  'japaneast'
+  'westcentralus'
+  'germanywestcentral'
+])
 param location string
 
 param healthDataServiceWorkspaceName string = ''
@@ -44,7 +65,9 @@ module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
   scope: resourceGroup
   name: 'healthcareapis'
   params: {
-    workspaceName: !empty(healthDataServiceWorkspaceName) ? healthDataServiceWorkspaceName : '${abbrs.healthcareapis}${resourceToken}'
+    workspaceName: !empty(healthDataServiceWorkspaceName)
+      ? healthDataServiceWorkspaceName
+      : '${abbrs.healthcareapis}${resourceToken}'
     location: location
     tags: tags
     importConfiguration: importConfiguration
@@ -52,7 +75,9 @@ module healthdataservice 'core/ahds/healthdataservices-workspace.bicep' = {
 }
 
 var appServiceName = !empty(functionAppName) ? functionAppName : '${abbrs.webSitesFunctions}-${resourceToken}'
-var storageAccountName = !empty(funcStorageAccountName) ? funcStorageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
+var storageAccountName = !empty(funcStorageAccountName)
+  ? funcStorageAccountName
+  : '${abbrs.storageStorageAccounts}${resourceToken}'
 
 var containers = [
   {
@@ -132,6 +157,7 @@ module functionApp 'app/function.bicep' = {
     name: appServiceName
     location: location
     tags: tags
+    fhirStorageName: storageAccount.outputs.name
     storageAccountName: storageAccount.outputs.name
     keyVaultName: ''
     appServicePlanId: appServicePlan.outputs.id

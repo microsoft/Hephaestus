@@ -10,6 +10,11 @@ param keyVaultName string
 param serviceName string = 'function'
 param storageAccountName string
 param managedIdentity bool = !empty(keyVaultName)
+param fhirStorageName string
+
+resource fhirStorage 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
+  name: fhirStorageName
+}
 
 module api '../core/host/functions.bicep' = {
   name: '${serviceName}-functions-java-module'
@@ -19,7 +24,9 @@ module api '../core/host/functions.bicep' = {
     tags: union(tags, { 'azd-service-name': serviceName })
     allowedOrigins: allowedOrigins
     alwaysOn: false
-    appSettings: appSettings
+    appSettings: union(appSettings, {
+      FHIR_STORAGE_CONN_STR: 'DefaultEndpointsProtocol=https;AccountName=${fhirStorage.name};AccountKey=${fhirStorage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+    })
     applicationInsightsName: applicationInsightsName
     appServicePlanId: appServicePlanId
     keyVaultName: keyVaultName
