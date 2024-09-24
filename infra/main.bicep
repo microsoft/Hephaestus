@@ -206,3 +206,12 @@ module functionAppStorageQueueRoleAssignment 'core/security/role.bicep' = {
     roleDefinitionId: '974c5e8b-45b9-4653-ba55-5f855dd0fb88' // Storage Queue Data Contributor
   }
 }
+
+module functionAppMonitoringMetricsRoleAssignment 'core/security/role.bicep' = {
+  name: 'functionmonitoringmetricsroleassignment'
+  scope: resourceGroup
+  params: {
+    principalId: functionApp.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    roleDefinitionId: '3913510d-42f4-4e42-8a64-420c390055eb' // Monitoring Metrics Publisher
+  }
+}
