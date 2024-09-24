@@ -39,7 +39,7 @@ public class FhirImportFunction {
         fhirImportRequest.setResourceType("Parameters");
 
         List<FhirImportRequest.Parameter> parameters = new ArrayList<>();
-        
+
         // inputFormat parameter
         FhirImportRequest.Parameter inputFormatParam = new FhirImportRequest.Parameter();
         inputFormatParam.setName("inputFormat");
@@ -56,7 +56,7 @@ public class FhirImportFunction {
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
                 .connectionString(System.getenv("FHIR_STORAGE_CONN_STR")).buildClient();
         String blobBaseUrl = blobServiceClient.getAccountUrl() + "/" + System.getenv("FHIR_STORAGE_CONTAINER");
-        
+
         for (NdJsonReference file : batchReference.Files) {
             // input parameter
             FhirImportRequest.Parameter inputParam = new FhirImportRequest.Parameter();
@@ -70,7 +70,7 @@ public class FhirImportFunction {
 
         fhirImportRequest.setParameter(parameters.toArray(new FhirImportRequest.Parameter[0]));
         ObjectMapper mapper = new ObjectMapper();
-        
+
         // Send FHIR $import request
         try {
             String importRequestJson = mapper.writeValueAsString(fhirImportRequest);
@@ -81,16 +81,27 @@ public class FhirImportFunction {
             tokenRequestContext.addScopes(System.getenv("FHIR_SERVER_URL") + "/.default");
             AccessToken authToken = tokenCredential.getTokenSync(tokenRequestContext);
             HttpRequest request = HttpRequest.newBuilder()
-            .uri(url.toURI())
-            .header("Authorization", "Bearer " + authToken.getToken())
-            .header("Content-Type", "application/fhir+json")
-            .header("Prefer", "respond-async")
-            .POST(HttpRequest.BodyPublishers.ofString(importRequestJson))
-            .build();
+                    .uri(url.toURI())
+                    .header("Authorization", "Bearer " + authToken.getToken())
+                    .header("Content-Type", "application/fhir+json")
+                    .header("Prefer", "respond-async")
+                    .POST(HttpRequest.BodyPublishers.ofString(importRequestJson))
+                    .build();
 
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 
-            context.getLogger().log(Level.INFO, "FHIR $import response code: {0}", response.statusCode());
+            logger.log(Level.INFO, "FHIR $import response code: {0}", response.statusCode());
+
+            // todo: check response status first - since a 403 means no content-location
+
+            if(response.statusCode() == 403) {
+                logger.log(Level.SEVERE, "FHIR $import request failed with status code {0}", response.statusCode());
+                batchReference.BatchStatus = "fullyFailed";
+                Helper.saveBatchReference(batchReference, logger);
+                return;
+            }
+
+            // header causing an exception not related to the real permission problem
             // Grab the status location from the response header
             String statusLocation = response.headers().firstValue("Content-Location").get();
 
@@ -98,7 +109,7 @@ public class FhirImportFunction {
             batchReference.BatchStatusUrl = statusLocation;
             Helper.saveBatchReference(batchReference, logger);
         } catch (Exception e) {
-            context.getLogger().log(Level.SEVERE, "Error sending FHIR $import request: {0}", e.getMessage());
+            logger.log(Level.SEVERE, "Error sending FHIR $import request: {0}", e.getMessage());
         }
     }
 }
