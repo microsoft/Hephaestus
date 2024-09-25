@@ -13,7 +13,7 @@ As the maintainer of this project, please make a few updates:
 ## Azure Function Environment Variables
 
 ```JSON
-    "StorageConnStr": "<fhir storage>",
+    "FHIR_STORAGE_CONN_STR": "<fhir storage>",
     "FHIR_STORAGE_CONTAINER": "data",
     "FHIR_STORAGE_TABLE": "batchtable",
     "FHIR_STORAGE_QUEUE": "fhir-hose",
