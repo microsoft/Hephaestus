@@ -9,25 +9,12 @@ param environmentName string
 @description('Primary location for all resources')
 @allowed([
   'southcentralus'
-  'northeurope'
-  'westeurope'
   'eastus2'
-  'australiaeast'
-  'uksouth'
   'westus2'
   'canadacentral'
-  'switzerlandnorth'
   'westus3'
-  'centralindia'
-  'southeastasia'
-  'koreacentral'
-  'swedencentral'
   'northcentralus'
-  'francecentral'
-  'qatarcentral'
-  'japaneast'
   'westcentralus'
-  'germanywestcentral'
 ])
 param location string
 

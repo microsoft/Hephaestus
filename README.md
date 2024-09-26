@@ -1,16 +1,21 @@
 # Project
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This MVP sample project is an orchestration process for ingesting large volumes of FHIR bundles (ndjson) into an Azure Health Data Services FHIR Api using the $import endpoint.
 
-As the maintainer of this project, please make a few updates:
+The orchestration process is implemented using a Durable Azure Function app written in Java.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+![architecture diagram](./docs/architecture.drawio.png)
 
-## Azure Function Environment Variables
+## Local Development Setup Guide
+
+1. Clone this repo to your local machine -OR- open in Github Codespaces.
+1. Run `az login` AND `azd auth login` to authenticate with your Azure Subscription.
+1. Run `azd up` OR `azd provision` to deploy the necessary Azure resources to your subscription.
+1. Create a copy of [local.settings.example.json](./local.settings.example.json) and rename it to `local.settings.json`.
+1. Update the local.settings.json file you just created with values from your environment using the variable guide below.
+1. Run and debug by pressing `F5` in VSCode.
+
+Azure Function Environment Variables
 
 ```JSON
     "FHIR_STORAGE_CONN_STR": "<fhir storage>",

@@ -16,7 +16,7 @@ usage() {
 
 # Function to deploy infrastructure
 deploy_infra() {
-    echo "Please run azd up to create/update the infra"
+    echo "Please run azd provision to create/update the infra"
 }
 
 # Function to package function app

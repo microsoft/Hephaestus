@@ -9,5 +9,6 @@ workflows:
 services:
   function:
     project: .
+    dist: target/azure-functions/Hephaestus
     language: java
     host: function
