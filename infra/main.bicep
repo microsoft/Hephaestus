@@ -156,6 +156,8 @@ module functionApp 'app/function.bicep' = {
       FHIR_STORAGE_TABLE: fhirStorageTableName
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.outputs.connectionString
       FHIR_IMPORT_MODE: importMode
+      MAX_BATCH_SIZE: 1500
+      SUGGESTED_MIN_FILE_SIZE: 20000
     }
   }
 }

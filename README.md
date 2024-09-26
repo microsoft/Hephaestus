@@ -6,6 +6,21 @@ The orchestration process is implemented using a Durable Azure Function app writ
 
 ![architecture diagram](./docs/architecture.drawio.png)
 
+### Logical flow:
+1. A user-defined external data extraction and transformation process creates NDJSON FHIR bundles and sends them to the Azure Storage Account specified by `FHIR_STORAGE_CONN_STR` and `FHIR_STORAGE_CONTAINER`.
+1. When an export file is ready for processing, send a message to the Azure Storage Queue `FHIR_STORAGE_QUEUE`. 
+`{ "filename": "2024-07-22.ndjson", "lineCount": 1059, "isLastFileInRequest": true}`
+1. A Queue triggered Azure Function picks up the message and begins assembling an import batch. Additional files will be added to the same batch until the `MAX_BATCH_SIZE` is achieved.
+1. When the Orchestration function detects that `MAX_BATCH_SIZE` has been exceeded, or the incoming Queue message contains `"isLastFileInRequest": true`, the batch is submitted to the $import endpoint of the FHIR API `FHIR_SERVER_URL`.
+1. A Timer triggered function monitors the status endpoint URL returned by the $import endpoint.
+
+### Logging and Monitoring
+All batches and files are tracked in an Azure Storage Table `FHIR_STORAGE_TABLE`. When a job is complete, the status is updated in the table along with basic statistics about the job.
+
+Application Insights and Log Analytics are used to feed an Azure Dashboard page that provides visibility into the running orchestration process and FHIR Import jobs.
+
+Log files emitted from the FHIR $import process are automatically loaded to a storage container `fhirlogs` of the Storage Account defined by `FHIR_STORAGE_CONN_STR`. These logs can be consumed by Azure Fabric and PowerBI, or any other data/reporting/analysis tools, for the purpose of detailed status reporting. The setup and configuration of a Fabric workspace and PowerBI report are outside the scope of this repository.
+
 ## Local Development Setup Guide
 
 1. Clone this repo to your local machine -OR- open in Github Codespaces.
@@ -23,7 +38,9 @@ Azure Function Environment Variables
     "FHIR_STORAGE_TABLE": "batchtable",
     "FHIR_STORAGE_QUEUE": "fhir-hose",
     "FHIR_SERVER_URL": "https://<fhirWorkspace>-<fhirApi>.fhir.azurehealthcareapis.com",
-    "FHIR_IMPORT_MODE": "IncrementalLoad"
+    "FHIR_IMPORT_MODE": "IncrementalLoad",
+    "MAX_BATCH_SIZE": 100000000,
+    "SUGGESTED_MIN_FILE_SIZE": 20000
 ```
 
 ## Contributing
