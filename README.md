@@ -1,6 +1,9 @@
 # Project
 
-This MVP sample project is an orchestration process for ingesting large volumes of FHIR bundles (ndjson) into an Azure Health Data Services FHIR Api using the $import endpoint.
+This MVP sample project is an orchestration process for ingesting large volumes of FHIR bundles (ndjson) into an Azure Health Data Services FHIR Api using the $import endpoint. Following the documented [Performance Considerations](https://learn.microsoft.com/en-us/azure/healthcare-apis/fhir/import-data#performance-considerations), this project aims to achieve maximum scaling efficiency by batching files according to these specifications:
+- ndjson files should contain at least 20k resources
+- import batch should include at least 100M resources
+- reduce number of concurrent running jobs
 
 The orchestration process is implemented using a Durable Azure Function app written in Java.
 
