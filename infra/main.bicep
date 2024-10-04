@@ -9,25 +9,12 @@ param environmentName string
 @description('Primary location for all resources')
 @allowed([
   'southcentralus'
-  'northeurope'
-  'westeurope'
   'eastus2'
-  'australiaeast'
-  'uksouth'
   'westus2'
   'canadacentral'
-  'switzerlandnorth'
   'westus3'
-  'centralindia'
-  'southeastasia'
-  'koreacentral'
-  'swedencentral'
   'northcentralus'
-  'francecentral'
-  'qatarcentral'
-  'japaneast'
   'westcentralus'
-  'germanywestcentral'
 ])
 param location string
 
@@ -169,6 +156,8 @@ module functionApp 'app/function.bicep' = {
       FHIR_STORAGE_TABLE: fhirStorageTableName
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.outputs.connectionString
       FHIR_IMPORT_MODE: importMode
+      MAX_BATCH_SIZE: 1500
+      SUGGESTED_MIN_FILE_SIZE: 20000
     }
   }
 }
